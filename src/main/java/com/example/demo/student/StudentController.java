@@ -1,25 +1,23 @@
 package com.example.demo.student;
 
+import com.example.demo.course.Course;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.List;
 
-//this is more organizied than putting everything in demoApplication
+//layer1
+//this is more organized than putting everything in demoApplication
 //this is an api layer
 @RestController
-@RequestMapping(path = "api/v1/student") //instead of localhost:8081 it'll be localhost:8081/api/v1/student
-
-
-//layer2
+@RequestMapping(path = "api/v1/student") //instead of localhost:8081 it'll be localhost:8081/api/v1/course
 public class StudentController {
 
     private final StudentService studentService;
 
-    @Autowired //to make StudentService auto injected in constructor
+    //to make CourseService auto injected in constructor
     //dependency injection
+    @Autowired
     public StudentController(StudentService studentService) {
         this.studentService = studentService;
     }
@@ -27,26 +25,31 @@ public class StudentController {
     @GetMapping
     public List<Student> getStudents(){
         return studentService.getStudentsFromDB();
-//        return studentService.getStudents();
-//        return List.of(
-//                new Student(
-//                        1111000,
-//                        "Reem",
-//                        "reem.atalah1@gmail.com",
-//                        22,
-//                        LocalDate.of(2000, Month.JULY, 9)
-//                )
-//        );
     }
 
-    //map student, take it from request body
+    //studentID names are same so no need to say it inside PathVariable
+    // use RequestMapping(its default is GetMapping) instead of GetMapping
+    @RequestMapping("get_student/{studentID}")
+    public Student getAStudent(@PathVariable Long studentID){
+        return studentService.getStudent(studentID);
+    }
+
+    //map course, take it from request body
     @PostMapping
     public void registerNewStudent(@RequestBody Student student){
         studentService.addNewStudent(student);
     }
 
+    //another way for post request
+    @RequestMapping(method = RequestMethod.POST, value = "/addStudent")
+    public void registerNewStudentAnotherWay(@RequestBody Student student)
+    {
+        studentService.addNewStudent(student);
+    }
+
     @DeleteMapping(path = "{studentID}")
     //id in path url not in body
+    //studentID in path differs from id in function
     public void deleteStudent(@PathVariable("studentID") Long id){
         studentService.deleteStudent(id);
     }
@@ -58,4 +61,20 @@ public class StudentController {
             @RequestParam(required = false) String email){
         studentService.updateStudent(id,name,email);
     }
+
+    @PutMapping(path = "{studentID}/{courseID}")
+    public Course assignStudentToCourse(
+            @PathVariable Long studentID,
+            @PathVariable Long courseID){
+        return studentService.addCourseToStudent(studentID, courseID);
+    }
+
+    @GetMapping(path = "get_students_with_course_id/{courseID}")
+    public List<Student> getStudents(
+            @PathVariable("courseID")  Long courseID
+    ){
+        return studentService.getStudentsWithCourse(courseID);
+    }
+
+
 }

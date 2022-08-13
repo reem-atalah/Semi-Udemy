@@ -1,10 +1,13 @@
 package com.example.demo.student;
 
+import com.example.demo.course.Course;
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.persistence.*;
 import java.time.LocalDate;
-import java.time.Period;
 
-//take this data of student to create table in db using spring data JPA to add, delete ..etc
+//take this data of course to create table in db using spring data JPA to add, delete ..etc
 @Entity
 @Table
 public class Student {
@@ -18,83 +21,34 @@ public class Student {
             strategy =GenerationType.SEQUENCE,
             generator = "student_sequence"
     )
-    private long id;
-    private String name;
-    private String email;
-    private LocalDate dob;
+    //lombok instead of setters and getters
+    private @Getter Long id;
+    private @Getter @Setter String name;
+    private @Getter @Setter String email;
+    private @Getter @Setter LocalDate dob;
+    @ManyToOne
+    private @Getter @Setter Course course; // assume now that a student can assign to one course
 
-    @Transient
     //make age not a column in db
     //and remove it from constructor
-    private Integer age;
+//    @Transient
+//    private @Getter Integer age =  Period.between(this.dob, LocalDate.now()).getYears();
+
+    public String getIdString() {
+        return String.valueOf(id);
+    }
 
 
     public Student() {
     }
-
-    public Student(long id, String name, String email, LocalDate dob) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.dob = dob;
-    }
-
     //without id
-    public Student(String name, String email, LocalDate dob) {
+//    this uses @Id @SequenceGenerator @GeneratedValue,according to sequence of id
+    public Student(String name, String email, LocalDate dob, Long courseId) {
         this.name = name;
         this.email = email;
         this.dob = dob;
+        this.course=new Course(courseId);
     }
 
-    public long getId() {
-        return id;
-    }
 
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    //get the age from birth
-    public Integer getAge() {
-        return Period.between(this.dob, LocalDate.now()).getYears();
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
-    }
-
-    public LocalDate getDob() {
-        return dob;
-    }
-
-    public void setDob(LocalDate dob) {
-        this.dob = dob;
-    }
-
-    @Override
-    public String toString() {
-        return "Student{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", age=" + age +
-                ", dob=" + dob +
-                '}';
-    }
 }

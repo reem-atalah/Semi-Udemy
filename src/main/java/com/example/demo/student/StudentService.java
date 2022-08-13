@@ -1,50 +1,40 @@
 package com.example.demo.student;
 
+import com.example.demo.course.Course;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 //@Component
 //to make it spring bean, can be used directly injected in another class
-@Service
+
 //Service and component are the same but Service is better for readability
 //now it's a service class
+//layer2
+@Service
 
-//layer3
 public class StudentService {
 
     private final StudentRepository studentRepository;
+    private final Utility utility;
 
     @Autowired
-    public StudentService(StudentRepository studentRepository) {
+    public StudentService(StudentRepository studentRepository,Utility utility) {
         this.studentRepository = studentRepository;
+        this.utility = utility;
     }
 
     public void addNewStudent(Student student) {
         //make validation that this email doesn't exist,
         //if exists, through exception
-        checkEmailIsTaken(student.getEmail());
+        utility.checkEmailIsTaken(studentRepository,student.getEmail());
         studentRepository.save((student));//save in db
 
-        System.out.println("I'm new student");
-    }
-
-    public List<Student> getStudents() {
-        return List.of(
-                new Student(
-                        1111000,
-                        "Reem",
-                        "reem.atalah1@gmail.com",
-//                        22,
-                        LocalDate.of(2000, Month.JULY, 9)
-                )
-        );
+        System.out.println("I'm new course");
     }
 
     public List<Student> getStudentsFromDB() {
@@ -55,37 +45,62 @@ public class StudentService {
         boolean exists= studentRepository.existsById(id);
         if(!exists)
             throw new IllegalStateException(
-                    "Student with id: " +id +" doesn't exist"
+                    "Course with id: " +id +" doesn't exist"
             );
         studentRepository.deleteById(id);
     }
+
+    // use transactional to update directly in the course retrieved from db, without going to db again
+    // i.e. we don't make  studentRepository.save((course));
+    // Note: we can use "studentRepository.save((course))" to update
+    // as for same id, it will change name and email in existing id
     @Transactional
     public void updateStudent(Long studentID, String name,String email){
-        Student retreiveStudent= studentRepository.findById(studentID)
+        Student retrieveStudent= studentRepository.findById(studentID)
                 .orElseThrow(() -> new IllegalStateException(
                         "Student with id: " +studentID +" doesn't exist"
                 ));
         if (name != null &&
             name.length() > 0 &&
-            !Objects.equals(retreiveStudent.getName(), name))
+            !Objects.equals(retrieveStudent.getName(), name))
 
             //this will update it in db, we don't need queries due to using  @Transactional
-            retreiveStudent.setName(name);
+            retrieveStudent.setName(name);
 
         if (email != null &&
                 email.length() > 0 &&
-                !Objects.equals(retreiveStudent.getEmail(), email) ){
+                !Objects.equals(retrieveStudent.getEmail(), email) ){
 
-            checkEmailIsTaken(email);
+            utility.checkEmailIsTaken(studentRepository,email);
 
-            retreiveStudent.setEmail(email);
+            retrieveStudent.setEmail(email);
         }
     }
-    //not work
-    public void checkEmailIsTaken(String email){
-        Optional<Student> studentOptioanl=
-                studentRepository.findStudentByEmail(email);
-        if(studentOptioanl.isPresent())
-            throw new IllegalStateException("email is taken");
+
+    public Student getStudent(Long studentID) {
+        return getStudentsFromDB().stream().filter(t-> t.getIdString().equals(studentID.toString())).findFirst().get();
+//        or we can simply say:
+//        return studentRepository.findById(studentID)
+//                .orElseThrow(() -> new IllegalStateException(
+//                //we must put this to convert from Optional<Course> to Course
+//                "Course with id: " +studentID +" doesn't exist"
+//        ));
+    }
+
+    public List<Student> getStudentsWithCourse(Long courseID) {
+        return studentRepository.findByCourseId(courseID);
+    }
+
+    @Transactional
+    public Course addCourseToStudent(Long studentID, Long courseID) {
+        Student retrieveStudent= studentRepository.findById(studentID)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Student with id: " +studentID +" doesn't exist"
+                ));
+        retrieveStudent.setCourse(new Course(courseID));
+        //don't need to put name and description, they'll be put automatically from id referenced
+        return retrieveStudent.getCourse();
+
     }
 }
+
