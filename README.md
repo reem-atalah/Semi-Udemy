@@ -1,2 +1,2 @@
-# Backend with springBoot 
-Connect the backend with database PosrgeSQL and write some queries.
+# Backend Semi-Udemy
+Connect the backend of SpringBoot with database PosrgeSQL using spring data JPA applied with MVC design pattern.

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 //@Component
 //to make it spring bean, can be used directly injected in another class
@@ -20,7 +19,7 @@ import java.util.Optional;
 public class StudentService {
 
     private final StudentRepository studentRepository;
-    private final Utility utility;
+    private Utility utility;
 
     @Autowired
     public StudentService(StudentRepository studentRepository,Utility utility) {
